@@ -75,7 +75,7 @@ const containerRef = useRef(null);
 
 
       {/* Prompt input Box */}
-      <form onSubmit={onSubmit} className='bg-primary/20 dark:bg-[#58C79]/30 border border-primary dark:border-[#80609F]/30 rounded-full max-w-2xl p-3 pl-4 mx-auto flex gap-4 items-center'>
+      <form onSubmit={onSubmit} className='bg-primary/20 dark:bg-[#58C79]/30 border border-primary dark:border-[#80609F]/30 rounded-full w-full max-w-4xl p-3 pl-4 mx-auto flex gap-4 items-center'>
         <select onChange={(e)=>setMode(e.target.value)} value={mode} className='text-sm pl-3 pr-2 outline-none'>
           <option className='dark:bg-purple-900' value="text">Text</option>
           <option className='dark:bg-purple-900' value="image">Image</option>

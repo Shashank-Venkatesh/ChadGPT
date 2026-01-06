@@ -8,3 +8,5 @@ Frontend new Learning:
     react-markdown
     prismjs
     reset-tw
+    timeout
+    useLocation
