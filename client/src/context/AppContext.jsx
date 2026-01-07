@@ -14,6 +14,7 @@ export const AppContextProvider = ({children}) => {
 
     const fetchUser = async () => {
         setUser(dummyUserData)
+        // setUser()
     }
 
     const fetchUserChats = async () => {
