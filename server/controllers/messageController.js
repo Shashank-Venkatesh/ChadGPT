@@ -64,67 +64,97 @@ export const textMessageController = async (req, res) => {
 };
 
 
+//Image Generation Message Controller
 
 export const imageMessageController = async (req, res) => {
   try {
     const userId = req.user._id;
-
-    // Check user credits
-    if (req.user.credits < 2) {
-      return res.json({
-        success: false,
-        message: "You don't have enough credits"
-      });
-    }
-
     const { prompt, chatId, isPublished } = req.body;
 
-    // Find chat and validate
-    const chat = await Chat.findOne({ _id: chatId, userId });
-    if (!chat || !Array.isArray(chat.message)) {
-      return res.json({ success: false, message: "Chat not found" });
+    if (!prompt || !chatId) {
+      return res.json({
+        success: false,
+        message: "Prompt and chatId are required",
+      });
     }
-
-    // Save user message first
+    
+    
+    // Atomic credit check + deduction
+    const user = await User.findOneAndUpdate(
+      { _id: userId, credits: { $gte: 2 } },
+      { $inc: { credits: -2 } },
+      { new: true }
+    );
+    
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "You don't have enough credits",
+      });
+    }
+    
+    // Find chat
+    const chat = await Chat.findOne({ _id: chatId, userId });
+    if (!chat) {
+      return res.json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+    
+    // Save user message
     chat.message.push({
       role: "user",
       content: prompt,
       timestamps: Date.now(),
       isImage: false,
-      isPublished: false
     });
-
-    // Encode prompt for ImageKit
+    
+    // Encode prompt
     const encodedPrompt = encodeURIComponent(prompt);
-
-    // Generate ImageKit GenAI URL
-    const generatedImageUrl = `${process.env.IMAGEKIT_URL_ENDPOINT}/generated.png?tr=genai-prompt:${encodedPrompt},w-800,h-800`;
-
-    // Save assistant message
+    
+    // ImageKit AI generation URL
+    const generatedImageUrl = `${process.env.IMAGEKIT_URL_ENDPOINT}/ik-genimg-prompt-${encodedPrompt}/chadgpt/${Date.now()}.png?tr=w-800,h-800`;
+    
+    // Fetch generated image
+    const aiImageResponse = await axios.get(generatedImageUrl, {
+      responseType: "arraybuffer",
+      timeout: 15000,
+    });
+    
+    // Convert to base64
+    const base64Image = `data:image/png;base64,${Buffer.from(
+      aiImageResponse.data
+    ).toString("base64")}`;
+    
+    // Upload to ImageKit
+    const uploadResponse = await imagekit.upload({
+      file: base64Image,
+      fileName: `${Date.now()}.png`,
+      folder: "chadgpt",
+    });
+    
     const reply = {
       role: "assistant",
-      content: generatedImageUrl,
+      content: uploadResponse.url,
       timestamps: Date.now(),
       isImage: true,
-      isPublished
+      isPublished,
     };
-
+    
+    // Save assistant message
     chat.message.push(reply);
-
-    // Save chat
     await chat.save();
-
-    // Deduct credits
-    await User.updateOne({ _id: userId }, { $inc: { credits: -2 } });
-
-    // Respond
-    return res.json({ success: true, reply });
-
+    
+    return res.json({
+      success: true,
+      reply,
+    });
   } catch (error) {
     console.error(error);
     return res.json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -133,3 +163,4 @@ export const imageMessageController = async (req, res) => {
 // console.log("User ID:", userId);
 // console.log("Chat ID:", chatId);
 // console.log("Chat ID type:", typeof chatId);
+// console.log("upload fn:", typeof imagekit.upload);

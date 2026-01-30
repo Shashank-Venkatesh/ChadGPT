@@ -138,3 +138,7 @@ Ensured proper order of variable declarations in the controller.
 Added validation and error handling to prevent future failures.
 
 ✅ Result: The AI image generation feature now works end-to-end, saving the user prompt and assistant-generated image URL in the chat, while deducting user credits correctly.
+
+Used Stripe for Payment because it was easy for getting developer apis and secret key
+
+and also used Svix for webhooks
