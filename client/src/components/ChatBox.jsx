@@ -2,27 +2,68 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { assets } from '../assets/assets';
 import Message from './Message';
+import toast from 'react-hot-toast';
 
 const ChatBox = () => {
 
 const containerRef = useRef(null);
 
-  const {selectedChat, theme} = useAppContext();
+  const {selectedChat, theme, user, axios, token, setUser} = useAppContext();
 
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [prompt, setPrompt] = useState('');
-  const [mode, setMode] = useState('');
+  const [mode, setMode] = useState('text');
   const [isPublished, setIsPublished] = useState(false);
 
   const onSubmit = async (e) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
+
+      if (!user) return toast('Login to send a message');
+      if (!prompt.trim()) return;
+      if (!selectedChat?._id) return toast.error("No chat selected");
+
+      setLoading(true);
+
+      const promptCopy = prompt;
+      setPrompt('');
+
+      setMessages(prev => [
+        ...prev,
+        { role: 'user', content: promptCopy, timestamp: Date.now(), isImage: false }
+      ]);
+
+      const { data } = await axios.post(
+        `/api/message/${mode}`,
+        { chatId: selectedChat._id, prompt: promptCopy, isPublished },
+        { headers: { Authorization: token }, timeout: mode === 'image' ? 90000 : 30000 }
+      );
+
+      if (data.success) {
+        setMessages(prev => [...prev, data.reply]);
+
+        setUser(prev => ({
+          ...prev,
+          credits: mode === 'image' ? prev.credits - 2 : prev.credits - 1
+        }));
+
+      } else {
+        toast.error(data.message);
+        setPrompt(promptCopy);
+      }
+
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(()=>{
     if(selectedChat){
-      setMessages(selectedChat.messages)
+      setMessages(selectedChat.messages || selectedChat.message || [])
     }
   },[selectedChat])
 

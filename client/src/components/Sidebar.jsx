@@ -6,7 +6,7 @@ import moment from 'moment';
 const Sidebar = ({ isMenuOpen, setIsMenuOpen}) => {
 
 
-  const {chats, selectedChat, setSelectedChat,theme, setTheme, user, navigate} = useAppContext()
+  const {chats, selectedChat, setSelectedChat, theme, setTheme, user, navigate, createNewChat, deleteChat, logout} = useAppContext()
   const[search, setSearch] = useState('');
 
   return (
@@ -16,7 +16,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen}) => {
       className='w-full max-w-48'/>
 
       {/* New Chat Button */}
-      <button className='flex justify-center items-center w-full py-2 mt-10 text-white bg-gradient-to-r from-[#A456F7] to-[#3D81F6] text-sm rounded-md cursor-pointer'>
+      <button onClick={createNewChat} className='flex justify-center items-center w-full py-2 mt-10 text-white bg-gradient-to-r from-[#A456F7] to-[#3D81F6] text-sm rounded-md cursor-pointer'>
         <span className='mr-2 text-xl'>+</span> New Chat
       </button>
 
@@ -40,7 +40,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen}) => {
                 <p className='text-xs text-gray-500 dark:text-[#B1A6C0]'>
                   {moment(chat.updatedAt).fromNow()}</p>
               </div>
-              <img src={assets.bin_icon} className='hidden group-hover:block w-4 cursor-pointer not-dark:invert' alt="" />
+              <img onClick={(e)=>{e.stopPropagation(); deleteChat(chat._id)}} src={assets.bin_icon} className='hidden group-hover:block w-4 cursor-pointer not-dark:invert' alt="" />
             </div>
           ))
         }
@@ -82,7 +82,7 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen}) => {
       <div className='flex items-center gap-3 p-3 mt-4 border border-gray-300 dark:border-white/15 rounded-md cursor-pointer group'>
         <img src={assets.user_icon} className='w-4.5 rounded-full' alt="" />
         <p className='flex-1 text-sm dark:text-primary truncate'>{user ? user.name : 'Login your account'}</p>
-        {user && <img src={assets.logout_icon} className='h-5 cursor-pointer hidden not-dark:invert group-hover:block'/>}
+        {user && <img onClick={logout} src={assets.logout_icon} className='h-5 cursor-pointer hidden not-dark:invert group-hover:block'/>}
       </div>
 
       <img onClick={()=>setIsMenuOpen(false)} src={assets.close_icon} className ='absolute top-3 right-3 w-5 h-5 cursor-pointer md:hidden not-dark:invert' alt="" />

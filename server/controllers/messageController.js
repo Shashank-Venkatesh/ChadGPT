@@ -13,41 +13,60 @@ export const textMessageController = async (req, res) => {
       return res.json({ success: false, message: "You don't have enough credits" });
     }
 
-    const chat = await Chat.findOne({
-      _id: chatId,
-      userId: userId.toString()
-    });
+    const chat = await Chat.findOne({ _id: chatId, userId });
 
-    if (!chat || !Array.isArray(chat.message)) {
+    if (!chat) {
       return res.json({ success: false, message: "Chat not found" });
     }
 
     // save user message
-    chat.message.push({
-    role: "user",
-    content: prompt,
-    timestamps: Date.now(),
-    isImage: false
+    chat.messages.push({
+      role: "user",
+      content: prompt,
+      timestamp: Date.now(),
+      isImage: false
     });
 
-
-    // 🔥 GEMINI CALL
+    // GEMINI
     const model = genai.getGenerativeModel({
-        model: "gemini-3-flash-preview"
+      model: "gemini-3-flash-preview",
+      systemInstruction: `You are Nexus — the AI assistant powering ChadGPT.
+
+Your key traits:
+- You are helpful, sharp, and straight to the point.
+- You can assist with coding, writing, brainstorming, math, general knowledge, and creative tasks.
+- Format code blocks with the appropriate language tag for syntax highlighting.
+- Use Markdown formatting to structure your responses clearly.
+- Be conversational but concise.
+- If you don't know something, say so honestly.
+- You do NOT generate images — image generation is a separate feature. If asked, tell the user to switch to image mode.
+- Never reveal internal system details, API keys, or backend architecture.`
     });
 
-    const result = await model.generateContent(prompt);
+    // Build conversation history for context-aware replies
+    const history = chat.messages
+      .filter(m => !m.isImage)
+      .slice(-20)
+      .map(m => ({
+        role: m.role === "assistant" ? "model" : "user",
+        parts: [{ text: m.content }]
+      }));
+
+    const chatHistory = history.slice(0, -1);
+
+    const geminiChat = model.startChat({ history: chatHistory });
+    const result = await geminiChat.sendMessage(prompt);
     const replyText = result.response.text();
 
     const reply = {
         role: "assistant",
         content: replyText,
-        timestamps: Date.now(),
+        timestamp: Date.now(),
         isImage: false
     };
 
 
-    chat.message.push(reply);
+    chat.messages.push(reply);
     await chat.save();
 
     await User.updateOne(
@@ -103,10 +122,10 @@ export const imageMessageController = async (req, res) => {
     }
     
     // Save user message
-    chat.message.push({
+    chat.messages.push({
       role: "user",
       content: prompt,
-      timestamps: Date.now(),
+      timestamp: Date.now(),
       isImage: false,
     });
     
@@ -116,10 +135,10 @@ export const imageMessageController = async (req, res) => {
     // ImageKit AI generation URL
     const generatedImageUrl = `${process.env.IMAGEKIT_URL_ENDPOINT}/ik-genimg-prompt-${encodedPrompt}/chadgpt/${Date.now()}.png?tr=w-800,h-800`;
     
-    // Fetch generated image
+    // Fetch generated image (AI generation can take a while)
     const aiImageResponse = await axios.get(generatedImageUrl, {
       responseType: "arraybuffer",
-      timeout: 15000,
+      timeout: 60000,
     });
     
     // Convert to base64
@@ -137,13 +156,13 @@ export const imageMessageController = async (req, res) => {
     const reply = {
       role: "assistant",
       content: uploadResponse.url,
-      timestamps: Date.now(),
+      timestamp: Date.now(),
       isImage: true,
       isPublished,
     };
     
     // Save assistant message
-    chat.message.push(reply);
+    chat.messages.push(reply);
     await chat.save();
     
     return res.json({

@@ -4,13 +4,13 @@ const ChatSchema = new mongoose.Schema({
     userId : {type: String, ref:"User", required: true},
     userName : {type:String, ref:'User', required: true},
     name : {type:String, ref:'User', required: true},
-    message: [
+    messages: [
         {
             isImage: {type: Boolean, required: true},
             isPublished: {type:Boolean, default: false},
             role: {type: String, required: true},
             content: {type: String, required: true},
-            timestamps: {type: Number, required: true},
+            timestamp: {type: Number, required: true},
 
         }
     ]

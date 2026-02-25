@@ -33,7 +33,7 @@ const Message = ({message}) => {
           (
             <div className='text-sm dark:text-primary reset-tw'><Markdown>{message.content}</Markdown></div>
           )}
-          <span className='text-xs text-gray-400 dark:text-[#B1A6C0]'>moment(message.timestamp).fromNow()</span>
+          <span className='text-xs text-gray-400 dark:text-[#B1A6C0]'>{moment(message.timestamp).fromNow()}</span>
 
         </div>
       )
