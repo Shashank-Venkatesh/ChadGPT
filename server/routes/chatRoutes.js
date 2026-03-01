@@ -1,11 +1,13 @@
 import express from 'express';
 import { protect } from '../middlewares/authMiddleware.js';
-import { createChat, deleteChat, getChats } from '../controllers/chatController.js';
+import { createChat, deleteChat, getChats, renameChat, bulkDeleteChats } from '../controllers/chatController.js';
 
 const chatRouter = express.Router();
 
 chatRouter.post('/create', protect, createChat)
 chatRouter.get('/get', protect, getChats)
 chatRouter.post('/delete', protect, deleteChat)
+chatRouter.post('/rename', protect, renameChat)
+chatRouter.post('/bulk-delete', protect, bulkDeleteChats)
 
 export default chatRouter;

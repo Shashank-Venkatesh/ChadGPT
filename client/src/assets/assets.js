@@ -42,7 +42,19 @@ export const assets = {
     logout_icon,
     logo_full_dark,
     diamond_icon,
-    gallery_icon
+    gallery_icon,
+    ai_image1,
+    ai_image2,
+    ai_image3,
+    ai_image4,
+    ai_image5,
+    ai_image6,
+    ai_image7,
+    ai_image8,
+    ai_image9,
+    ai_image10,
+    ai_image11,
+    ai_image12
 };
 
 export const dummyUserData = {

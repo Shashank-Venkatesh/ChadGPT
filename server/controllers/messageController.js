@@ -27,6 +27,24 @@ export const textMessageController = async (req, res) => {
       isImage: false
     });
 
+    // Detect image generation requests in text mode
+    const imageKeywords = /\b(generate|create|make|draw|design|sketch|paint|render|produce|craft)\b.{0,30}\b(image|picture|photo|illustration|art|artwork|drawing|painting|icon|avatar|logo|poster|banner|wallpaper|chibi|anime|cartoon|portrait|graphic|meme|sticker)\b/i;
+    const reversePattern = /\b(image|picture|photo|illustration|art|artwork|drawing|painting|icon|avatar|logo|poster|banner|wallpaper|chibi|anime|cartoon|portrait|graphic|meme|sticker)\b.{0,30}\b(of|for|with|about|featuring)\b/i;
+
+    if (imageKeywords.test(prompt) || reversePattern.test(prompt)) {
+      const reply = {
+        role: "assistant",
+        content: `## 🎨 Image Generation Request Detected\n\nHey! It looks like you're trying to create an image. Text mode is designed for conversations, code, and written content only.\n\nTo generate images, simply:\n\n1. **Switch to Image mode** using the dropdown at the bottom-left of the chat input\n2. **Type your prompt** describing what you'd like to create\n3. **Hit send** and watch the magic happen ✨\n\n> 💡 *Image generation costs **2 credits** per image.*\n\nSwitch over and let your creativity flow!`,
+        timestamp: Date.now(),
+        isImage: false
+      };
+
+      chat.messages.push(reply);
+      await chat.save();
+
+      return res.json({ success: true, reply });
+    }
+
     // GEMINI
     const model = genai.getGenerativeModel({
       model: "gemini-3-flash-preview",
@@ -78,7 +96,7 @@ Your key traits:
 
   } catch (error) {
     console.error("Gemini error:", error);
-    res.json({ success: false, message: error.message });
+    res.json({ success: false, message: "Something went wrong. Please try again later." });
   }
 };
 

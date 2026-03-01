@@ -41,14 +41,14 @@ pre[class*="language-"] {
 	padding: 1em;
 	margin: .5em 0;
 	overflow: auto;
-	background: #1e1e1e;
+	background: var(--bg-code, #1e1e1e);
 }
 
 :not(pre) > code[class*="language-"] {
 	padding: .1em .3em;
 	border-radius: .3em;
 	color: #db4c69;
-	background: #1e1e1e;
+	background: var(--bg-code, #1e1e1e);
 }
 /*********************************************************
 * Tokens
@@ -272,7 +272,12 @@ pre[class*="language-"] > code[class*="language-"] {
 }
 
 .line-highlight.line-highlight {
-	background: #f7ebc6;
-	box-shadow: inset 5px 0 0 #f7d87c;
+	background: rgba(168, 85, 247, 0.08);
+	box-shadow: inset 5px 0 0 rgba(168, 85, 247, 0.3);
 	z-index: 0;
+}
+
+.dark .line-highlight.line-highlight {
+	background: rgba(168, 85, 247, 0.15);
+	box-shadow: inset 5px 0 0 rgba(168, 85, 247, 0.4);
 }

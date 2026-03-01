@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import toast from "react-hot-toast";
@@ -13,7 +13,7 @@ export const AppContextProvider = ({children}) => {
     const [user, setUser] = useState(null);
     const [chats, setChats] = useState([]);
     const [selectedChat, setSelectedChat] = useState(null);
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
     const [token, setToken] = useState(localStorage.getItem('token') || null);
 
     const fetchUser = async () => {
@@ -22,26 +22,31 @@ export const AppContextProvider = ({children}) => {
             if(data.success){
                 setUser(data.user)
             } else {
-                // Token invalid or expired — clear it silently
                 localStorage.removeItem('token');
                 setToken(null);
                 setUser(null);
             }
         } catch (error) {
-            // Server unreachable or auth failed — clear stale token
             localStorage.removeItem('token');
             setToken(null);
             setUser(null);
         }
     }
 
+    // Optimistic create — instantly adds chat, no extra fetch
     const createNewChat = async () => {
         try {
             if(!user) return toast('Login to create a new chat');
             navigate('/')
             const {data} = await axios.post('/api/chat/create', {}, {headers: {Authorization: token}})
             if(data.success){
-                await fetchUserChats()
+                if(data.chat){
+                    setChats(prev => [data.chat, ...prev]);
+                    setSelectedChat(data.chat);
+                } else {
+                    // Chat created on server but response missing chat — refresh list
+                    await fetchUserChats();
+                }
             } else {
                 toast.error(data.message)
             }
@@ -70,17 +75,62 @@ export const AppContextProvider = ({children}) => {
         }
     }
 
+    // Optimistic single delete
     const deleteChat = async (chatId) => {
+        const prevChats = [...chats];
+        const remaining = chats.filter(c => c._id !== chatId);
+        setChats(remaining);
+        if(selectedChat?._id === chatId) setSelectedChat(remaining[0] || null);
         try {
             const {data} = await axios.post('/api/chat/delete', {chatId}, {headers: {Authorization: token}})
             if(data.success){
                 toast.success(data.message)
-                await fetchUserChats()
+                if(remaining.length === 0) await createNewChat();
             } else {
                 toast.error(data.message)
+                setChats(prevChats);
             }
         } catch (error) {
             toast.error(error.message)
+            setChats(prevChats);
+        }
+    }
+
+    // Optimistic bulk delete
+    const bulkDeleteChats = async (chatIds) => {
+        const prevChats = [...chats];
+        const remaining = chats.filter(c => !chatIds.includes(c._id));
+        setChats(remaining);
+        if(chatIds.includes(selectedChat?._id)) setSelectedChat(remaining[0] || null);
+        try {
+            const {data} = await axios.post('/api/chat/bulk-delete', {chatIds}, {headers: {Authorization: token}})
+            if(data.success){
+                toast.success(data.message)
+                if(remaining.length === 0) await createNewChat();
+            } else {
+                toast.error(data.message)
+                setChats(prevChats);
+            }
+        } catch (error) {
+            toast.error(error.message)
+            setChats(prevChats);
+        }
+    }
+
+    // Optimistic rename
+    const renameChat = async (chatId, name) => {
+        const prevChats = [...chats];
+        setChats(prev => prev.map(c => c._id === chatId ? {...c, name} : c));
+        if(selectedChat?._id === chatId) setSelectedChat(prev => ({...prev, name}));
+        try {
+            const {data} = await axios.post('/api/chat/rename', {chatId, name}, {headers: {Authorization: token}})
+            if(!data.success){
+                toast.error(data.message)
+                setChats(prevChats);
+            }
+        } catch (error) {
+            toast.error(error.message)
+            setChats(prevChats);
         }
     }
 
@@ -123,7 +173,7 @@ export const AppContextProvider = ({children}) => {
     const value = {
         navigate, user, setUser, chats, setChats, selectedChat, setSelectedChat,
         theme, setTheme, token, setToken, axios, createNewChat, deleteChat, logout,
-        fetchUserChats
+        fetchUserChats, renameChat, bulkDeleteChats
     }
 
 

@@ -9,6 +9,7 @@ import './assets/prism.css'
 import Loading from './pages/Loading'
 import { useAppContext } from './context/AppContext'
 import Login from './pages/Login'
+import LandingPage from './pages/LandingPage'
 
 const App = () => {
 
@@ -19,31 +20,36 @@ const App = () => {
 
   if(pathname === '/loading') return <Loading/>
 
+  // Show landing page for unauthenticated users on root path
+  if(!user && pathname === '/') return <LandingPage/>
+
+  // Show login page
+  if(!user && pathname === '/login') return <Login/>
+
+  // Redirect to landing if not authenticated
+  if(!user) return <LandingPage/>
+
   return (
-    <>
-    {!isMenuOpen && <img src={assets.menu_icon} className='absolute top-3 left-3 w-8 h-8 cursor-pointer md:hidden not-dark:invert'
-    onClick={()=>setIsMenuOpen(true)}/>}
+    <div className='bg-[var(--bg-base)] text-[var(--text-primary)] min-h-screen min-h-dvh'>
+      {/* Mobile menu button */}
+      {!isMenuOpen && (
+        <button
+          onClick={()=>setIsMenuOpen(true)}
+          className='fixed top-4 left-4 z-50 w-9 h-9 rounded-xl glass flex items-center justify-center md:hidden cursor-pointer hover:bg-[var(--bg-surface-hover)] transition-all'
+        >
+          <img src={assets.menu_icon} className='w-5 h-5 invert dark:invert-0' alt="menu"/>
+        </button>
+      )}
 
-    {user ? (
-      <div className='dark:bg-gradient-to-b from-[#242124] to-[#000000] dark:dark:text-white'>
-        <div className='flex h-screen w-screen'>
-          <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen}/>
-          <Routes>
-            <Route path='/' element={<ChatBox/>}/> 
-            <Route path='/credits' element={<Credits/>}/> 
-            <Route path='/community' element={<Community/>}/> 
-          </Routes>
-        </div>
+      <div className='flex h-dvh h-screen w-screen overflow-hidden'>
+        <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen}/>
+        <Routes>
+          <Route path='/' element={<ChatBox/>}/> 
+          <Route path='/credits' element={<Credits/>}/> 
+          <Route path='/community' element={<Community/>}/> 
+        </Routes>
       </div>
-    ) : (
-      <div className='bg-gradient-to-b from-[#242124] to-[#000000] flex items-center justify-center h-screen h-screen w-screen'>
-        <Login/>
-      </div>
-    )}
-
-    
-
-    </>
+    </div>
   )
 }
 

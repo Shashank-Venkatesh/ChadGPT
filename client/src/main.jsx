@@ -10,7 +10,16 @@ createRoot(document.getElementById('root')).render(
   <BrowserRouter>
     <AppContextProvider>
       <App/>
-      <Toaster/>
+      <Toaster
+        toastOptions={{
+          style: {
+            background: 'var(--bg-surface-hover)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-main)',
+            backdropFilter: 'blur(20px)',
+          },
+        }}
+      />
     </AppContextProvider>
   </BrowserRouter>
 )
