@@ -1,144 +1,277 @@
-# ChadGPT
+# ChadGPT 
 
+ChadGPT is an AI-powered chat application that supports **text generation, image generation, persistent chat history, and credit-based usage**.  
+The platform integrates modern AI APIs and provides a clean workflow for users to generate responses and images while maintaining chat sessions.
 
-Things used:
+---
 
-Frontend new Learning:
-    Moment
-    react-markdown
-    prismjs
-    reset-tw
-    timeout
-    useLocation
+# 🌐 Live Demo
 
-Library prebuild ui
+**Deployed Application**
 
-new package for backend 
+https://chad-gpt-taupe.vercel.app/
 
-open ai for text based output frm ai
-imagekit.io for image based out frm ai
-encodeURIComponent
+---
 
-⚙️ Gemini API Integration – Challenges & Learnings
+# ✨ Features
 
-While integrating the Gemini API into this project, I faced several non-obvious challenges that significantly deepened my understanding of modern AI SDKs, API versioning, and backend debugging.
+✅ AI text generation using Gemini API  
+✅ AI image generation using ImageKit GenAI  
+✅ Persistent chat history stored in MongoDB  
+✅ Credit-based usage system  
+✅ Stripe payment integration  
+✅ Secure webhook handling using Svix  
+✅ Real-time saving of user prompts and AI responses  
+✅ Scalable backend architecture  
 
-🚧 Key Challenges Faced
+---
 
-Outdated Tutorials & API Drift
-I initially followed a YouTube tutorial that used an OpenAI-compatible Gemini endpoint. Although the code worked in the video, it failed in my setup due to:
+#  Tech Stack
 
-Deprecated OpenAI-style endpoints
+## Frontend
+- React
+- Tailwind CSS
+- Axios
 
-Breaking changes in the latest SDKs
+## Backend
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
 
-Removed or renamed Gemini models
+## AI & Media Services
+- Gemini API (text generation)
+- ImageKit GenAI (image generation)
 
-This highlighted how fast AI APIs evolve and how quickly tutorials can become outdated.
+## Payments & Webhooks
+- Stripe
+- Svix
 
-Model Availability & Version Confusion
-Gemini models such as gemini-pro and gemini-1.5-flash returned 404 Model Not Found errors even though they appeared valid in documentation.
-The root cause was:
+## Deployment
+- Vercel
 
-API version mismatch (v1beta)
+---
 
-Limited model availability per API key / region
+#  Development Challenges & Debugging Journey
 
-The issue was resolved by identifying and using a universally supported model:
-gemini-1.0-pro.
+During development, several real-world backend integration issues appeared.  
+Resolving these problems helped improve the system architecture and strengthened debugging skills for production-level systems.
 
-Half-Migrated SDK Usage
-During the transition from OpenAI to Gemini, I initially imported the Gemini SDK but still had leftover OpenAI logic in the controller.
-This resulted in silent failures and misleading errors, reinforcing the importance of fully removing legacy code during migrations.
+---
 
-Mongoose Schema Validation Errors
-Even after the API integration worked, message saving failed due to a schema mismatch:
+# ⏳ Development Timeline & API Evolution
 
-The schema required a timestamps field
+Unlike many projects that are built in one focused development cycle, **ChadGPT was developed across multiple timelines**. Development was done intermittently due to other academic work and projects.
 
-The controller was sending timestamp instead
+This approach revealed an important real-world engineering challenge: **rapid API evolution**.
 
-This was fixed by aligning the schema and controller and simplifying timestamp handling using Mongoose’s built-in { timestamps: true }.
+Each time the project was revisited after a break, some parts of the application stopped working due to **updates in external APIs**.
 
-🧠 What I Learned
+These changes included:
 
-AI APIs change faster than most frontend or backend frameworks
+- SDK updates
+- Endpoint modifications
+- Request/response format changes
+- Model availability changes
 
-Always verify SDK versions, model availability, and API compatibility
+This required updating dependencies, verifying API documentation, and refactoring integration code.
 
-Debugging is often about isolating layers (API → controller → database)
+This experience highlighted the importance of:
 
-Schema consistency is just as important as API correctness
+- **API versioning**
+- **Dependency management**
+- **Backward compatibility**
+- **Continuous software maintenance**
 
-Real-world integration is rarely “plug and play” — persistence matters
+It reinforced the idea that modern applications must **continuously evolve with the services they depend on**.
 
-✅ Outcome
+---
 
-After resolving these issues:
+# 🛠 Backend Debugging & Fixes
 
-Gemini API responses are generated correctly
+## Timestamp Handling Issue
 
-Messages are stored reliably in MongoDB
+### Problem
 
-Credit deduction logic works as expected
+The controller was sending a `timestamp` field while the Mongoose schema expected `timestamps`.
 
-The system is now more stable and future-proof
+### Solution
 
-This process, although challenging, significantly improved my confidence in debugging production-level backend issues.
+Aligned the schema and controller and simplified timestamp handling using Mongoose's built-in feature:
 
+```js
+{ timestamps: true }
+```
 
+This removed the need to manually manage timestamps.
 
+---
 
-Image Generation Feature — Development Journey
+# 🖼 Image Generation Feature — Development Journey
 
-Challenge:
-While implementing AI image generation using ImageKit.io GenAI
-, I faced multiple issues:
+While implementing AI image generation using **ImageKit GenAI**, several integration issues occurred.
 
-Chat Not Found Error:
+---
 
-Initially, the backend kept returning "Chat not found".
+## 1️⃣ Chat Not Found Error
 
-Cause: a mismatch between the Chat schema and the frontend data (message vs messages) and incorrect handling of chatId.
+### Issue
 
-Fix: Aligned schema field names (message) with the database, validated chatId format, and ensured the frontend sends the correct _id.
+The backend repeatedly returned:
 
-ImageKit 404 / Axios Failures:
+```
+Chat not found
+```
 
-Attempted to download generated images via axios and re-upload them.
+### Cause
 
-Cause: ImageKit GenAI URLs are virtual and do not point to actual files. Downloading them caused 404 errors.
+- Schema mismatch (`message` vs `messages`)
+- Incorrect `chatId` handling
+- Frontend sending incorrect `_id`
 
-Fix: Removed downloading and re-upload logic, and used the GenAI URL directly in the chat messages, which is the official ImageKit workflow.
+### Fix
 
-Schema Validation Errors:
+- Standardized schema field names (`message`)
+- Validated `chatId` format
+- Ensured the frontend sends the correct `_id`
 
-Backend threw errors like "message.2.timestamps: Path 'timestamps' is required".
+---
 
-Cause: The schema expected timestamps but I was using timestamp.
+## 2️⃣ ImageKit 404 / Axios Errors
 
-Fix: Updated all message objects to use timestamps consistently, ensuring MongoDB schema validation passes.
+### Issue
 
-JavaScript Scope Errors:
+Attempting to download generated images using `axios` caused **404 errors**.
 
-Error: "Cannot access 'generatedImageUrl' before initialization"
+### Cause
 
-Cause: generatedImageUrl was used before declaring encodedPrompt.
+ImageKit GenAI URLs are **virtual URLs** and do not point to actual downloadable files.
 
-Fix: Declared and initialized encodedPrompt before using it to build the URL.
+### Fix
 
-Solution Summary:
+- Removed the download and re-upload workflow
+- Used the **ImageKit GenAI URL directly** in chat messages (recommended workflow)
 
-Standardized the Chat schema (message array, timestamps field).
+---
 
-Used ImageKit GenAI URLs directly without downloading.
+## 3️⃣ Schema Validation Errors
 
-Ensured proper order of variable declarations in the controller.
+### Error Example
 
-Added validation and error handling to prevent future failures.
+```
+message.2.timestamps: Path 'timestamps' is required
+```
 
-✅ Result: The AI image generation feature now works end-to-end, saving the user prompt and assistant-generated image URL in the chat, while deducting user credits correctly.
+### Cause
 
-Used Stripe for Payment because it was easy for getting developer apis and secret key
+The schema expected `timestamps` but the controller sent `timestamp`.
 
-and also used Svix for webhooks
+### Fix
+
+Updated all message objects to use:
+
+```js
+timestamps
+```
+
+This ensured MongoDB schema validation passed.
+
+---
+
+## 4️⃣ JavaScript Scope Error
+
+### Error
+
+```
+Cannot access 'generatedImageUrl' before initialization
+```
+
+### Cause
+
+`generatedImageUrl` was used before `encodedPrompt` was declared.
+
+### Fix
+
+Declared and initialized `encodedPrompt` before constructing the image URL.
+
+---
+
+# 💳 Payment Integration
+
+The application implements a **credit-based system** for AI usage.
+
+### Stripe
+
+Stripe was used for payment processing because it provides:
+
+- Well-documented APIs
+- Easy developer integration
+- Secure payment workflows
+
+### Svix
+
+Svix was used to manage **webhook events** securely for handling payment confirmations and updating user credits.
+
+---
+
+#  Final Solution Summary
+
+Key improvements implemented:
+
+- Standardized **Chat schema structure**
+- Simplified timestamp handling using Mongoose
+- Used **ImageKit GenAI URLs directly**
+- Improved **error handling and validation**
+- Fixed **variable initialization issues**
+- Implemented **secure payment and webhook handling**
+
+---
+
+# Final Outcome
+
+After resolving the issues:
+
+- Gemini API responses generate correctly
+- AI images are generated and stored in chat history
+- Messages persist reliably in MongoDB
+- Credit deduction works as expected
+- The backend system is more stable and maintainable
+
+This project significantly improved my understanding of:
+
+- Debugging production-level backend systems
+- Managing third-party API integrations
+- Handling real-world software maintenance challenges
+
+---
+
+# 📚 Key Learnings
+
+- AI APIs evolve faster than most traditional frameworks.
+- Always verify **SDK versions, API compatibility, and model availability**.
+- Effective debugging requires isolating layers:
+
+```
+API → Controller → Database
+```
+
+- Schema consistency is critical for stable backend systems.
+- Real-world integration often requires **continuous monitoring and maintenance**.
+
+---
+
+# Future Improvements
+
+- Streaming AI responses
+- Chat session sharing
+- Improved UI/UX
+- Usage analytics dashboard
+- Better caching and performance optimization
+
+---
+
+# 👨‍💻 Author
+
+**Shashank**
+
+First-year Computer Science student building full-stack applications with modern AI integrations.
