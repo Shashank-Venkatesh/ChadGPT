@@ -15,14 +15,14 @@ https://chad-gpt-taupe.vercel.app/
 
 # ✨ Features
 
-✅ AI text generation using Gemini API  
-✅ AI image generation using ImageKit GenAI  
-✅ Persistent chat history stored in MongoDB  
-✅ Credit-based usage system  
-✅ Stripe payment integration  
-✅ Secure webhook handling using Svix  
-✅ Real-time saving of user prompts and AI responses  
-✅ Scalable backend architecture  
+- AI text generation using Gemini API  
+- AI image generation using ImageKit GenAI  
+- Persistent chat history stored in MongoDB  
+- Credit-based usage system  
+- Stripe payment integration  
+- Secure webhook handling using Svix  
+- Real-time saving of user prompts and AI responses  
+- Scalable backend architecture  
 
 ---
 
@@ -270,8 +270,8 @@ API → Controller → Database
 
 ---
 
-# 👨‍💻 Author
+# Author
 
 **Shashank**
 
-First-year Computer Science student building full-stack applications with modern AI integrations.
+Second-year Computer Science student building full-stack applications with modern AI integrations.
